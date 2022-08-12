@@ -3,13 +3,13 @@ namespace CloudAcademy.Bitcoin.Tests;
 public class BitcoinConverterSvcShould
 {
   [Fact]
-  public void GetExchangeRate_USD_ReturnsUSDExchangeRate()
+  public async void GetExchangeRate_USD_ReturnsUSDExchangeRate()
   {
     //arrange
     var converterSvc = new ConverterSvc();
 
     //act
-    var exchangeRate = converterSvc.GetExchangeRate("USD");
+    var exchangeRate = await converterSvc.GetExchangeRate("USD");
 
     //assert
     var expected = 100;
@@ -17,13 +17,13 @@ public class BitcoinConverterSvcShould
   }
 
   [Fact]
-  public void GetExchangeRate_GBP_ReturnsGBPExchangeRate()
+  public async void GetExchangeRate_GBP_ReturnsGBPExchangeRate()
   {
     //arrange
     var converterSvc = new ConverterSvc();
 
     //act
-    var exchangeRate = converterSvc.GetExchangeRate("GBP");
+    var exchangeRate = await converterSvc.GetExchangeRate("GBP");
 
     //assert
     var expected = 200;
@@ -31,13 +31,13 @@ public class BitcoinConverterSvcShould
   }
 
   [Fact]
-  public void GetExchangeRate_EUR_ReturnsEURExchangeRate()
+  public async void GetExchangeRate_EUR_ReturnsEURExchangeRate()
   {
     //arrange
     var converterSvc = new ConverterSvc();
 
     //act
-    var exchangeRate = converterSvc.GetExchangeRate("EUR");
+    var exchangeRate = await converterSvc.GetExchangeRate("EUR");
 
     //assert
     var expected = 300;
@@ -51,13 +51,13 @@ public class BitcoinConverterSvcShould
   [InlineData("GBP", 2, 400)]
   [InlineData("EUR", 1, 300)]
   [InlineData("EUR", 2, 600)]
-  public void ConvertBitcoins_BitcoinsToCurrency_ReturnsCurrency(string currency, int coins, int expected)
+  public async void ConvertBitcoins_BitcoinsToCurrency_ReturnsCurrency(string currency, int coins, int expected)
   {
     //arrange
     var converterSvc = new ConverterSvc();
 
     //act
-    var dollars = converterSvc.ConvertBitcoins(currency, coins);
+    var dollars = await converterSvc.ConvertBitcoins(currency, coins);
 
     //assert
     Assert.Equal(expected, dollars);
