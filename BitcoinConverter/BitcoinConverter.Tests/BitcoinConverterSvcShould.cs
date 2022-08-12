@@ -44,45 +44,22 @@ public class BitcoinConverterSvcShould
     Assert.Equal(expected, exchangeRate);
   }
 
-  [Fact]
-  public void ConvertBitcoins_1BitcoinToUSD_ReturnsUSDDollars()
+  [Theory]
+  [InlineData("USD", 1, 100)]
+  [InlineData("USD", 2, 200)]
+  [InlineData("GBP", 1, 200)]
+  [InlineData("GBP", 2, 400)]
+  [InlineData("EUR", 1, 300)]
+  [InlineData("EUR", 2, 600)]
+  public void ConvertBitcoins_BitcoinsToCurrency_ReturnsCurrency(string currency, int coins, int expected)
   {
     //arrange
     var converterSvc = new ConverterSvc();
 
     //act
-    var exchangedValue = converterSvc.ConvertBitcoins("USD", 1);
+    var dollars = converterSvc.ConvertBitcoins(currency, coins);
 
     //assert
-    var expected = 100;
-    Assert.Equal(expected, exchangedValue);
-  }
-
-  [Fact]
-  public void ConvertBitcoins_1BitcoinToGBP_ReturnsGBPPounds()
-  {
-    //arrange
-    var converterSvc = new ConverterSvc();
-
-    //act
-    var exchangedValue = converterSvc.ConvertBitcoins("GBP", 1);
-
-    //assert
-    var expected = 200;
-    Assert.Equal(expected, exchangedValue);
-  }
-
-  [Fact]
-  public void ConvertBitcoins_1BitcoinToEUR_ReturnsEUREuros()
-  {
-    //arrange
-    var converterSvc = new ConverterSvc();
-
-    //act
-    var exchangedValue = converterSvc.ConvertBitcoins("EUR", 1);
-
-    //assert
-    var expected = 300;
-    Assert.Equal(expected, exchangedValue);
+    Assert.Equal(expected, dollars);
   }
 }
