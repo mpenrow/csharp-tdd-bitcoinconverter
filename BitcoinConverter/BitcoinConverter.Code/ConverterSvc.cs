@@ -22,4 +22,10 @@ public class ConverterSvc
     }
     return 0;
   }
+
+  public int ConvertBitcoins(string currency, int coins)
+  {
+    var exchangeRate = GetExchangeRate(currency);
+    return exchangeRate * coins;
+  }
 }
