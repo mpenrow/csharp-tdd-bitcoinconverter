@@ -1,63 +1,89 @@
+using System.Net;
+using Moq;
+using Moq.Protected;
+
 namespace CloudAcademy.Bitcoin.Tests;
 
 public class BitcoinConverterSvcShould
 {
+  private const string MOCK_RESPONSE_JSON = @"{""time"": {""updated"": ""Oct 15, 2020 22:55:00 UTC"",""updatedISO"": ""2020-10-15T22:55:00+00:00"",""updateduk"": ""Oct 15, 2020 at 23:55 BST""},""chartName"": ""Bitcoin"",""bpi"": {""USD"": {""code"": ""USD"",""symbol"": ""&#36;"",""rate"": ""11,486.5341"",""description"": ""United States Dollar"",""rate_float"": 11486.5341},""GBP"": {""code"": ""GBP"",""symbol"": ""&pound;"",""rate"": ""8,900.8693"",""description"": ""British Pound Sterling"",""rate_float"": 8900.8693},""EUR"": {""code"": ""EUR"",""symbol"": ""&euro;"",""rate"": ""9,809.3278"",""description"": ""Euro"",""rate_float"": 9809.3278}}}";
+
+  private ConverterSvc mockConverter;
+
+  public BitcoinConverterSvcShould()
+  {
+    mockConverter = GetMockBitcoinConverterService();
+  }
+
+  private ConverterSvc GetMockBitcoinConverterService()
+  {
+
+    var handlerMock = new Mock<HttpMessageHandler>();
+    var response = new HttpResponseMessage
+    {
+      StatusCode = HttpStatusCode.OK,
+      Content = new StringContent(MOCK_RESPONSE_JSON),
+    };
+
+    handlerMock
+       .Protected()
+       .Setup<Task<HttpResponseMessage>>(
+          "SendAsync",
+          ItExpr.IsAny<HttpRequestMessage>(),
+          ItExpr.IsAny<CancellationToken>())
+       .ReturnsAsync(response);
+
+    var httpClient = new HttpClient(handlerMock.Object);
+
+    var converter = new ConverterSvc(httpClient);
+
+    return converter;
+  }
+
   [Fact]
   public async void GetExchangeRate_USD_ReturnsUSDExchangeRate()
   {
-    //arrange
-    var converterSvc = new ConverterSvc();
-
     //act
-    var exchangeRate = await converterSvc.GetExchangeRate("USD");
+    var exchangeRate = await mockConverter.GetExchangeRate("USD");
 
     //assert
-    var expected = 100;
+    var expected = 11486.5341;
     Assert.Equal(expected, exchangeRate);
   }
 
   [Fact]
   public async void GetExchangeRate_GBP_ReturnsGBPExchangeRate()
   {
-    //arrange
-    var converterSvc = new ConverterSvc();
-
     //act
-    var exchangeRate = await converterSvc.GetExchangeRate("GBP");
+    var exchangeRate = await mockConverter.GetExchangeRate("GBP");
 
     //assert
-    var expected = 200;
+    var expected = 8900.8693;
     Assert.Equal(expected, exchangeRate);
   }
 
   [Fact]
   public async void GetExchangeRate_EUR_ReturnsEURExchangeRate()
   {
-    //arrange
-    var converterSvc = new ConverterSvc();
-
     //act
-    var exchangeRate = await converterSvc.GetExchangeRate("EUR");
+    var exchangeRate = await mockConverter.GetExchangeRate("EUR");
 
     //assert
-    var expected = 300;
+    var expected = 9809.3278;
     Assert.Equal(expected, exchangeRate);
   }
 
   [Theory]
-  [InlineData("USD", 1, 100)]
-  [InlineData("USD", 2, 200)]
-  [InlineData("GBP", 1, 200)]
-  [InlineData("GBP", 2, 400)]
-  [InlineData("EUR", 1, 300)]
-  [InlineData("EUR", 2, 600)]
-  public async void ConvertBitcoins_BitcoinsToCurrency_ReturnsCurrency(string currency, int coins, int expected)
+  [InlineData("USD", 1, 11486.5341)]
+  [InlineData("USD", 2, 22973.0682)]
+  [InlineData("GBP", 1, 8900.8693)]
+  [InlineData("GBP", 2, 17801.7386)]
+  [InlineData("EUR", 1, 9809.3278)]
+  [InlineData("EUR", 2, 19618.6556)]
+  public async void ConvertBitcoins_BitcoinsToCurrency_ReturnsCurrency(string currency, int coins, double expected)
   {
-    //arrange
-    var converterSvc = new ConverterSvc();
-
     //act
-    var dollars = await converterSvc.ConvertBitcoins(currency, coins);
+    var dollars = await mockConverter.ConvertBitcoins(currency, coins);
 
     //assert
     Assert.Equal(expected, dollars);
