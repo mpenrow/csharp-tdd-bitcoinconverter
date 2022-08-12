@@ -6,14 +6,20 @@ public class ConverterSvc
 {
   private const string BITCOIN_CURRENTPRICE_URL = "https://api.coindesk.com/v1/bpi/currentprice.json";
 
-  public ConverterSvc()
-  {
+  private HttpClient client;
 
+  public ConverterSvc() : this(new HttpClient())
+  {
+  }
+
+  public ConverterSvc(HttpClient httpClient)
+  {
+    this.client = httpClient;
   }
 
   public async Task<double> GetExchangeRate(string currency)
   {
-    var response = await new HttpClient().GetStringAsync(BITCOIN_CURRENTPRICE_URL);
+    var response = await this.client.GetStringAsync(BITCOIN_CURRENTPRICE_URL);
 
     if (currency.Equals("USD"))
     {
