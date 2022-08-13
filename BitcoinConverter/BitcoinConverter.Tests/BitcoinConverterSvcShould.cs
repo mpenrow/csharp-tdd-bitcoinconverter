@@ -26,12 +26,10 @@ public class BitcoinConverterSvcShould
     };
 
     handlerMock
-       .Protected()
-       .Setup<Task<HttpResponseMessage>>(
-          "SendAsync",
-          ItExpr.IsAny<HttpRequestMessage>(),
-          ItExpr.IsAny<CancellationToken>())
-       .ReturnsAsync(response);
+      .Protected()
+      .Setup<Task<HttpResponseMessage>>(
+        "SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+      .ReturnsAsync(response);
 
     var httpClient = new HttpClient(handlerMock.Object);
 
@@ -44,7 +42,7 @@ public class BitcoinConverterSvcShould
   public async void GetExchangeRate_USD_ReturnsUSDExchangeRate()
   {
     //act
-    var exchangeRate = await mockConverter.GetExchangeRate("USD");
+    var exchangeRate = await mockConverter.GetExchangeRate(ConverterSvc.Currency.USD);
 
     //assert
     var expected = 11486.5341;
@@ -55,7 +53,7 @@ public class BitcoinConverterSvcShould
   public async void GetExchangeRate_GBP_ReturnsGBPExchangeRate()
   {
     //act
-    var exchangeRate = await mockConverter.GetExchangeRate("GBP");
+    var exchangeRate = await mockConverter.GetExchangeRate(ConverterSvc.Currency.GBP);
 
     //assert
     var expected = 8900.8693;
@@ -66,7 +64,7 @@ public class BitcoinConverterSvcShould
   public async void GetExchangeRate_EUR_ReturnsEURExchangeRate()
   {
     //act
-    var exchangeRate = await mockConverter.GetExchangeRate("EUR");
+    var exchangeRate = await mockConverter.GetExchangeRate(ConverterSvc.Currency.EUR);
 
     //assert
     var expected = 9809.3278;
@@ -74,18 +72,56 @@ public class BitcoinConverterSvcShould
   }
 
   [Theory]
-  [InlineData("USD", 1, 11486.5341)]
-  [InlineData("USD", 2, 22973.0682)]
-  [InlineData("GBP", 1, 8900.8693)]
-  [InlineData("GBP", 2, 17801.7386)]
-  [InlineData("EUR", 1, 9809.3278)]
-  [InlineData("EUR", 2, 19618.6556)]
-  public async void ConvertBitcoins_BitcoinsToCurrency_ReturnsCurrency(string currency, int coins, double expected)
+  [InlineData(ConverterSvc.Currency.USD, 1, 11486.5341)]
+  [InlineData(ConverterSvc.Currency.USD, 2, 22973.0682)]
+  [InlineData(ConverterSvc.Currency.GBP, 1, 8900.8693)]
+  [InlineData(ConverterSvc.Currency.GBP, 2, 17801.7386)]
+  [InlineData(ConverterSvc.Currency.EUR, 1, 9809.3278)]
+  [InlineData(ConverterSvc.Currency.EUR, 2, 19618.6556)]
+  public async void ConvertBitcoins_BitcoinsToCurrency_ReturnsCurrency(ConverterSvc.Currency currency, int coins, double expected)
   {
     //act
     var dollars = await mockConverter.ConvertBitcoins(currency, coins);
 
     //assert
     Assert.Equal(expected, dollars);
+  }
+
+  [Fact]
+  public async void ConvertBitcoins_BitcoinsAPIServiceUnavailable_ReturnsNegativeOne()
+  {
+    var handlerMock = new Mock<HttpMessageHandler>();
+    var response = new HttpResponseMessage
+    {
+      StatusCode = HttpStatusCode.ServiceUnavailable,
+      Content = new StringContent("problems..."),
+    };
+
+    handlerMock
+      .Protected()
+      .Setup<Task<HttpResponseMessage>>(
+        "SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+      .ReturnsAsync(response);
+
+    var httpClient = new HttpClient(handlerMock.Object);
+
+    var converter = new ConverterSvc(httpClient);
+
+    //act
+    var amount = await converter.ConvertBitcoins(ConverterSvc.Currency.USD, 5);
+
+    //assert
+    var expected = -1;
+    Assert.Equal(expected, amount);
+  }
+
+  [Fact]
+  public async void ConvertBitCoins_BitcoinsLessThanZero_ThrowsArgumentException()
+  {
+    //act
+    Task result() => mockConverter.ConvertBitcoins(ConverterSvc.Currency.USD, -1);
+
+    //assert
+    await Assert.ThrowsAsync<ArgumentException>(result);
   }
 }
