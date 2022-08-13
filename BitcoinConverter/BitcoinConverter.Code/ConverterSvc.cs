@@ -17,34 +17,47 @@ public class ConverterSvc
     this.client = httpClient;
   }
 
-  public async Task<double> GetExchangeRate(string currency)
+  public enum Currency
   {
-    var response = await this.client.GetStringAsync(BITCOIN_CURRENTPRICE_URL);
-
-    if (currency.Equals("USD"))
-    {
-      var jsonDoc = JsonDocument.Parse(Encoding.ASCII.GetBytes(response));
-      var rate = jsonDoc.RootElement.GetProperty("bpi").GetProperty(currency).GetProperty("rate");
-      return Double.Parse(rate.GetString());
-    }
-    else if (currency.Equals("GBP"))
-    {
-      var jsonDoc = JsonDocument.Parse(Encoding.ASCII.GetBytes(response));
-      var rate = jsonDoc.RootElement.GetProperty("bpi").GetProperty(currency).GetProperty("rate");
-      return Double.Parse(rate.GetString());
-    }
-    else if (currency.Equals("EUR"))
-    {
-      var jsonDoc = JsonDocument.Parse(Encoding.ASCII.GetBytes(response));
-      var rate = jsonDoc.RootElement.GetProperty("bpi").GetProperty(currency).GetProperty("rate");
-      return Double.Parse(rate.GetString());
-    }
-    return 0;
+    USD,
+    GBP,
+    EUR
   }
 
-  public async Task<double> ConvertBitcoins(string currency, int coins)
+  public async Task<double> GetExchangeRate(Currency currency)
   {
+    double rate = 0;
+
+    try
+    {
+      var response = await this.client.GetStringAsync(BITCOIN_CURRENTPRICE_URL);
+      var jsonDoc = JsonDocument.Parse(Encoding.ASCII.GetBytes(response));
+      var rateStr = jsonDoc.RootElement.GetProperty("bpi").GetProperty(currency.ToString()).GetProperty("rate");
+
+      rate = Double.Parse(rateStr.GetString());
+    }
+    catch
+    {
+      rate = -1;
+    }
+
+    return Math.Round(rate, 4);
+  }
+
+  public async Task<double> ConvertBitcoins(Currency currency, double coins)
+  {
+    if (coins < 0)
+    {
+      throw new ArgumentException("Number of coins should be positive");
+    }
+
     var exchangeRate = await GetExchangeRate(currency);
-    return exchangeRate * coins;
+
+    if (exchangeRate < 0)
+    {
+      return -1;
+    }
+
+    return Math.Round(exchangeRate * coins, 4);
   }
 }
