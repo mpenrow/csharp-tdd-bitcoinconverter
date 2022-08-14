@@ -116,6 +116,37 @@ public class BitcoinConverterSvcShould
   }
 
   [Fact]
+  public async void ConvertBitcoins_BitcoinsAPIRateMissing_ReturnsNegativeOne()
+  {
+    const string MOCK_RESPONSE_JSON_MISSING_RATE = @"{""time"": {""updated"": ""Oct 15, 2020 22:55:00 UTC"",""updatedISO"": ""2020-10-15T22:55:00+00:00"",""updateduk"": ""Oct 15, 2020 at 23:55 BST""},""chartName"": ""Bitcoin"",""bpi"": {""USD"": {""code"": ""USD"",""symbol"": ""&#36;"",""rate"": """",""description"": ""United States Dollar"",""rate_float"": 11486.5341},""GBP"": {""code"": ""GBP"",""symbol"": ""&pound;"",""rate"": ""8,900.8693"",""description"": ""British Pound Sterling"",""rate_float"": 8900.8693},""EUR"": {""code"": ""EUR"",""symbol"": ""&euro;"",""rate"": ""9,809.3278"",""description"": ""Euro"",""rate_float"": 9809.3278}}}";
+
+
+    var handlerMock = new Mock<HttpMessageHandler>();
+    var response = new HttpResponseMessage
+    {
+      StatusCode = HttpStatusCode.OK,
+      Content = new StringContent(MOCK_RESPONSE_JSON_MISSING_RATE),
+    };
+
+    handlerMock
+      .Protected()
+      .Setup<Task<HttpResponseMessage>>(
+        "SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+      .ReturnsAsync(response);
+
+    var httpClient = new HttpClient(handlerMock.Object);
+
+    var converter = new ConverterSvc(httpClient);
+
+    //act
+    var amount = await converter.ConvertBitcoins(ConverterSvc.Currency.USD, 5);
+
+    //assert
+    var expected = -1;
+    Assert.Equal(expected, amount);
+  }
+
+  [Fact]
   public async void ConvertBitCoins_BitcoinsLessThanZero_ThrowsArgumentException()
   {
     //act

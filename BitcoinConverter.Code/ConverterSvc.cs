@@ -34,7 +34,7 @@ public class ConverterSvc
       var jsonDoc = JsonDocument.Parse(Encoding.ASCII.GetBytes(response));
       var rateStr = jsonDoc.RootElement.GetProperty("bpi").GetProperty(currency.ToString()).GetProperty("rate").GetString();
 
-      if (rateStr is not null)
+      if (!string.IsNullOrEmpty(rateStr))
       {
         rate = Double.Parse(rateStr);
       }
