@@ -32,9 +32,16 @@ public class ConverterSvc
     {
       var response = await this.client.GetStringAsync(BITCOIN_CURRENTPRICE_URL);
       var jsonDoc = JsonDocument.Parse(Encoding.ASCII.GetBytes(response));
-      var rateStr = jsonDoc.RootElement.GetProperty("bpi").GetProperty(currency.ToString()).GetProperty("rate");
+      var rateStr = jsonDoc.RootElement.GetProperty("bpi").GetProperty(currency.ToString()).GetProperty("rate").GetString();
 
-      rate = Double.Parse(rateStr.GetString());
+      if (rateStr is not null)
+      {
+        rate = Double.Parse(rateStr);
+      }
+      else
+      {
+        rate = -1;
+      }
     }
     catch
     {
